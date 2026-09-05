@@ -1,0 +1,193 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Admin
+// ---------------------------------------------------------------------------
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String   @default("Администратор")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Catalog
+// ---------------------------------------------------------------------------
+
+model Category {
+  id              String    @id @default(cuid())
+  nameRu          String
+  nameKg          String
+  slug            String    @unique
+  descriptionRu   String    @default("")
+  descriptionKg   String    @default("")
+  image           String?
+  isActive        Boolean   @default(true)
+  sortOrder       Int       @default(0)
+  products        Product[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model Product {
+  id              String         @id @default(cuid())
+  nameRu          String
+  nameKg          String
+  slug            String         @unique
+  brand           String?
+  categoryId      String
+  category        Category       @relation(fields: [categoryId], references: [id])
+  price           Int
+  oldPrice        Int?
+  stock           Int            @default(0)
+  sku             String         @unique
+  descriptionRu   String         @default("")
+  descriptionKg   String         @default("")
+  compositionRu   String         @default("")
+  compositionKg   String         @default("")
+  careRu          String         @default("")
+  careKg          String         @default("")
+  characteristics Json?
+  images          ProductImage[]
+  isPublished     Boolean        @default(true)
+  featured        Boolean        @default(false)
+  isNew           Boolean        @default(false)
+  orderItems      OrderItem[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([categoryId, isPublished])
+  @@index([featured])
+  @@index([isNew])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String  @default("")
+  sortOrder Int     @default(0)
+
+  @@index([productId, sortOrder])
+}
+
+// ---------------------------------------------------------------------------
+// Customers & Orders
+// ---------------------------------------------------------------------------
+
+model Customer {
+  id        String   @id @default(cuid())
+  phone     String   @unique
+  name      String
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum DeliveryMethod {
+  DELIVERY
+  PICKUP
+}
+
+enum OrderStatus {
+  NEW
+  CONFIRMED
+  PROCESSING
+  READY
+  DELIVERING
+  COMPLETED
+  CANCELLED
+}
+
+model Order {
+  id              String         @id @default(cuid())
+  orderNumber     String         @unique
+  customerId      String?
+  customer        Customer?      @relation(fields: [customerId], references: [id])
+  customerName    String
+  phone           String
+  address         String?
+  comment         String         @default("")
+  deliveryMethod  DeliveryMethod
+  status          OrderStatus    @default(NEW)
+  itemsAmount     Int
+  deliveryAmount  Int
+  totalAmount     Int
+  items           OrderItem[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([status, createdAt])
+  @@index([phone])
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productName String
+  price       Int
+  quantity    Int
+  total       Int
+
+  @@index([orderId])
+}
+
+// ---------------------------------------------------------------------------
+// Notifications
+// ---------------------------------------------------------------------------
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Store settings (singleton row, id = "main")
+// ---------------------------------------------------------------------------
+
+model StoreSettings {
+  id               String   @id @default("main")
+  storeName        String   @default("FLOWERSGREEN")
+  phone            String   @default("+996 507-55-66-03")
+  whatsapp         String   @default("+996 507-55-66-03")
+  address          String   @default("ул. Исы Ахунбаева, 173/1, 720044, Бишкек, Первомайский район, 1-2 этаж")
+  workingHours     String   @default("Ежедневно 10:00–21:00")
+  deliveryPrice    Int      @default(0)
+  minimumOrder     Int      @default(0)
+  instagram        String?
+  whatsappMessageRu String  @default("Здравствуйте! Я хочу узнать о товарах Flowersgreen.")
+  whatsappMessageKg String  @default("Салам! Мен Flowersgreen товарлары жөнүндө билгим келет.")
+  ratingValue      Float    @default(4.8)
+  ratingCount      Int      @default(68)
+  reviewsCount     Int      @default(26)
+  heroTitleRu      String   @default("Цветы, которые говорят за вас")
+  heroTitleKg      String   @default("Сиз үчүн сүйлөгөн гүлдөр")
+  heroSubtitleRu   String   @default("Свежие цветы, букеты и подарки с доставкой по Бишкеку")
+  heroSubtitleKg   String   @default("Бишкек боюнча жеткирүү менен жаңы гүлдөр, букеттер жана белектер")
+  heroImage        String?
+  deliveryTextRu   String   @default("")
+  deliveryTextKg   String   @default("")
+  mapUrl           String?
+  updatedAt        DateTime @updatedAt
+}
