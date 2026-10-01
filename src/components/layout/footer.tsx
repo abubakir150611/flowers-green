@@ -68,6 +68,8 @@ export function Footer({ settings }: { settings: StoreSettings }) {
           <ul className="space-y-2 text-sm text-graphite-soft">
             <li><Link href="/privacy" className="hover:text-green focus-ring rounded">{dict.footer.privacy}</Link></li>
             <li><Link href="/terms" className="hover:text-green focus-ring rounded">{dict.footer.terms}</Link></li>
+            <li><Link href="/cookies" className="hover:text-green focus-ring rounded">{dict.footer.cookies}</Link></li>
+            <li><Link href="/returns" className="hover:text-green focus-ring rounded">{dict.footer.returns}</Link></li>
           </ul>
         </div>
       </div>
