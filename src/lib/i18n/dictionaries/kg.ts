@@ -231,6 +231,8 @@ const kg: Dictionary = {
     legal: "Юридикалык маалымат",
     privacy: "Купуялык саясаты",
     terms: "Колдонуу шарттары",
+    cookies: "Cookies саясаты",
+    returns: "Кайтаруу жана алмаштыруу",
     rights: "Бардык укуктар корголгон",
   },
   toast: {

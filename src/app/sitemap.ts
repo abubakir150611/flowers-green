@@ -12,6 +12,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/contacts",
     "/privacy",
     "/terms",
+    "/cookies",
+    "/returns",
   ].map((path) => ({
     url: `${siteUrl}${path}`,
     lastModified: new Date(),
@@ -19,10 +21,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: path === "" ? 1 : 0.7,
   }));
 
-  const [categories, products] = await Promise.all([
-    prisma.category.findMany({ where: { isActive: true }, select: { slug: true, updatedAt: true } }),
-    prisma.product.findMany({ where: { isPublished: true }, select: { slug: true, updatedAt: true } }),
-  ]);
+  let categories: { slug: string; updatedAt: Date }[] = [];
+  let products: { slug: string; updatedAt: Date }[] = [];
+
+  try {
+    [categories, products] = await Promise.all([
+      prisma.category.findMany({ where: { isActive: true }, select: { slug: true, updatedAt: true } }),
+      prisma.product.findMany({ where: { isPublished: true }, select: { slug: true, updatedAt: true } }),
+    ]);
+  } catch {
+    // If DB is not reachable during static export/build, fallback to static routes
+  }
 
   const categoryRoutes: MetadataRoute.Sitemap = categories.map((c) => ({
     url: `${siteUrl}/catalog/${c.slug}`,
